@@ -3,4 +3,6 @@ project(Redaactor)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Redaactor main.cpp)
+add_executable(Redaactor main.cpp
+        Redactor.hpp
+        Redactor.cpp)
