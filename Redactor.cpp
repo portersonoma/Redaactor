@@ -5,6 +5,9 @@
 #include "Redactor.hpp"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 // Constructor
 Redactor::Redactor(const std::string &name, const std::string &dob)
@@ -25,7 +28,7 @@ std::string Redactor::readFile(const std::string &filePath) {
     return content;
 }
 
-// Redact name and DOB from file content
+// Redact sensitive data
 void Redactor::redactContent(std::string &content) {
     size_t pos;
     while ((pos = content.find(nameToRedact)) != std::string::npos) {
@@ -36,7 +39,7 @@ void Redactor::redactContent(std::string &content) {
     }
 }
 
-// Write redacted content to a new file
+// Write redacted content to the new output folder
 void Redactor::writeFile(const std::string &filePath, const std::string &content) {
     std::ofstream outFile(filePath);
     if (outFile.is_open()) {
@@ -49,15 +52,30 @@ void Redactor::writeFile(const std::string &filePath, const std::string &content
 
 // Process all text files in a directory
 void Redactor::processDirectory(const std::string &directory) {
-    for (const auto &entry : fs::directory_iterator(directory)) {
-        if (entry.path().extension() == ".txt") {
+    // Get parent directory of the input directory
+    fs::path inputDir = directory;
+    fs::path outputFolder = inputDir.parent_path() / "redacted_files";
+
+    fs::create_directory(outputFolder); // Create output folder if it doesn't exist
+
+    for (const auto &entry : fs::directory_iterator(inputDir)) {
+        if (entry.path().extension() == ".txt") { // Only process .txt files
             std::string content = readFile(entry.path().string());
             redactContent(content);
-            std::string newFile = entry.path().parent_path().string() + "/" +
-                                  entry.path().stem().string() + "_redacted.txt";
+
+            // Save file to the output folder
+            std::string newFile = outputFolder.string() + "/" + entry.path().stem().string() + "_redacted.txt";
             writeFile(newFile, content);
             std::cout << "Redacted file saved: " << newFile << "\n";
         }
     }
-}
 
+    // Open the output folder
+#ifdef _WIN32
+    system(("explorer " + outputFolder.string()).c_str()); // Windows
+#elif __APPLE__
+    system(("open " + outputFolder.string()).c_str());     // macOS
+#else
+    system(("xdg-open " + outputFolder.string()).c_str()); // Linux
+#endif
+}

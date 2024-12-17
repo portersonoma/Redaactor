@@ -16,9 +16,10 @@ int main() {
 
     // Create a Redactor object and process files
     Redactor redactor(name, dob);
+    std::cout << "Redaction complete" << std::endl;
     redactor.processDirectory(directory);
+    std::cout << "Directory created" << std::endl;
 
-    std::cout << "Redaction complete!" << std::endl;
     return 0;
 }
 
